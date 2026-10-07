@@ -33,3 +33,9 @@ pnpm-debug.log*
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Agent & Checkpoint files (local development instructions)
+AGENT.md
+AGENTS.md
+CHECKPOINT.md
+GEMINI.md

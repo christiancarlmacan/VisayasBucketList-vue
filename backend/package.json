@@ -1,0 +1,35 @@
+{
+  "name": "visayas-bucketlist-backend",
+  "version": "1.0.0",
+  "description": "Backend API for VisayasBucketList",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "node src/prisma/seed.js"
+  },
+  "keywords": [
+    "visayas",
+    "bucketlist",
+    "express",
+    "prisma"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7",
+    "prisma": "^5.22.0"
+  }
+}

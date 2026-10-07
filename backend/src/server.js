@@ -6,6 +6,10 @@ import destinationRoutes from './routes/destinationRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import bucketListRoutes from './routes/bucketListRoutes.js';
 import favoriteRoutes from './routes/favoriteRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import achievementRoutes from './routes/achievementRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -38,6 +42,10 @@ app.use('/api/destinations', destinationRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/bucketlist', bucketListRoutes);
 app.use('/api/favorites', favoriteRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/achievements', achievementRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 Route Handler
 app.use('*', (req, res) => {

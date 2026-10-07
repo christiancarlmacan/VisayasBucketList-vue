@@ -14,42 +14,72 @@
         <nav class="hidden md:flex items-center space-x-1 lg:space-x-2">
           <RouterLink
             to="/explore"
-            class="px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors"
+            class="px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors"
             :class="$route.path === '/explore' ? 'text-teal-700 bg-teal-50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'"
           >
             Explore
           </RouterLink>
 
-          <RouterLink
-            v-if="authStore.isAuthenticated"
-            to="/bucket-list"
-            class="px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1.5"
-            :class="$route.path === '/bucket-list' ? 'text-teal-700 bg-teal-50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'"
-          >
-            <span>Bucket List</span>
-            <span
-              v-if="bucketListStore.items.length > 0"
-              class="px-1.5 py-0.5 text-[10px] font-bold bg-teal-100 text-teal-800 rounded-full"
+          <template v-if="authStore.isAuthenticated">
+            <RouterLink
+              to="/bucket-list"
+              class="px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors flex items-center gap-1.5"
+              :class="$route.path === '/bucket-list' ? 'text-teal-700 bg-teal-50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'"
             >
-              {{ bucketListStore.items.length }}
-            </span>
-          </RouterLink>
+              <span>Bucket List</span>
+              <span
+                v-if="bucketListStore.items.length > 0"
+                class="px-1.5 py-0.5 text-[10px] font-bold bg-teal-100 text-teal-800 rounded-full"
+              >
+                {{ bucketListStore.items.length }}
+              </span>
+            </RouterLink>
 
-          <RouterLink
-            v-if="authStore.isAuthenticated"
-            to="/favorites"
-            class="px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors"
-            :class="$route.path === '/favorites' ? 'text-teal-700 bg-teal-50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'"
-          >
-            Favorites
-          </RouterLink>
+            <RouterLink
+              to="/visited"
+              class="px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors"
+              :class="$route.path === '/visited' ? 'text-teal-700 bg-teal-50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'"
+            >
+              Visited 🎉
+            </RouterLink>
+
+            <RouterLink
+              to="/favorites"
+              class="px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors"
+              :class="$route.path === '/favorites' ? 'text-teal-700 bg-teal-50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'"
+            >
+              Favorites
+            </RouterLink>
+
+            <RouterLink
+              to="/achievements"
+              class="px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors flex items-center gap-1"
+              :class="$route.path === '/achievements' ? 'text-amber-800 bg-amber-50' : 'text-slate-600 hover:text-amber-800 hover:bg-amber-50/50'"
+            >
+              <span>🏆</span>
+              <span>Badges</span>
+            </RouterLink>
+          </template>
         </nav>
 
-        <!-- Auth Controls (Desktop) -->
+        <!-- Auth & Admin Controls (Desktop) -->
         <div class="hidden md:flex items-center gap-3">
           <template v-if="authStore.isAuthenticated">
             <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
-              <div class="text-right">
+              <!-- Admin Switcher Link -->
+              <RouterLink
+                v-if="authStore.isAdmin"
+                to="/admin"
+                class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-300 text-xs font-black rounded-xl transition-all flex items-center gap-1 shadow-xs"
+              >
+                <span>⚡</span>
+                <span>Admin Panel</span>
+              </RouterLink>
+
+              <RouterLink
+                to="/profile"
+                class="text-right hover:opacity-80 transition-opacity"
+              >
                 <p class="text-xs font-bold text-slate-800 leading-none">
                   {{ authStore.user?.name }}
                 </p>
@@ -59,11 +89,12 @@
                 >
                   Admin
                 </span>
-                <span v-else class="text-[10px] text-slate-400">Traveler</span>
-              </div>
+                <span v-else class="text-[10px] text-slate-400">My Profile</span>
+              </RouterLink>
+
               <button
                 @click="handleLogout"
-                class="px-3.5 py-2 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 text-xs font-bold rounded-xl transition-all"
+                class="px-3 py-1.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 text-xs font-bold rounded-xl transition-all"
               >
                 Logout
               </button>
@@ -119,13 +150,21 @@
         >
           Explore Destinations
         </RouterLink>
+
         <template v-if="authStore.isAuthenticated">
           <RouterLink
             to="/bucket-list"
             @click="mobileMenuOpen = false"
             class="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
-            My Bucket List
+            My Bucket List ({{ bucketListStore.items.length }})
+          </RouterLink>
+          <RouterLink
+            to="/visited"
+            @click="mobileMenuOpen = false"
+            class="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Visited Spots 🎉
           </RouterLink>
           <RouterLink
             to="/favorites"
@@ -134,6 +173,29 @@
           >
             My Favorites
           </RouterLink>
+          <RouterLink
+            to="/achievements"
+            @click="mobileMenuOpen = false"
+            class="block px-3 py-2 rounded-lg text-sm font-semibold text-amber-700 hover:bg-amber-50"
+          >
+            Travel Achievements 🏆
+          </RouterLink>
+          <RouterLink
+            to="/profile"
+            @click="mobileMenuOpen = false"
+            class="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            My Profile
+          </RouterLink>
+          <RouterLink
+            v-if="authStore.isAdmin"
+            to="/admin"
+            @click="mobileMenuOpen = false"
+            class="block px-3 py-2 rounded-lg text-sm font-black text-amber-600 bg-amber-50/60"
+          >
+            ⚡ Admin Control Panel
+          </RouterLink>
+
           <div class="pt-3 border-t border-slate-100 flex items-center justify-between px-3">
             <span class="text-xs font-bold text-slate-700">{{ authStore.user?.name }}</span>
             <button

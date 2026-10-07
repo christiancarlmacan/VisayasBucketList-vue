@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
@@ -29,18 +30,29 @@ async function main() {
   }
   console.log('✅ Categories seeded successfully.');
 
-  // 2. Create Admin and Test User
-  const adminPasswordHash = await bcrypt.hash('Admin@123456', 10);
-  const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@visayasbucketlist.ph' },
-    update: {},
-    create: {
-      name: 'System Admin',
-      email: 'admin@visayasbucketlist.ph',
-      password_hash: adminPasswordHash,
-      role: 'ADMIN',
-    },
-  });
+  // 2. Create Admin and Test User (Admin credentials securely loaded from .env)
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminName = process.env.ADMIN_NAME || 'System Admin';
+
+  if (adminEmail && adminPassword) {
+    const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
+    await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: {
+        role: 'ADMIN',
+      },
+      create: {
+        name: adminName,
+        email: adminEmail,
+        password_hash: adminPasswordHash,
+        role: 'ADMIN',
+      },
+    });
+    console.log(`✅ Admin user (${adminEmail}) seeded successfully from environment variables.`);
+  } else {
+    console.log('ℹ️ Admin user not seeded. Provide ADMIN_EMAIL and ADMIN_PASSWORD in backend/.env to automatically seed an administrator.');
+  }
 
   const demoUserPasswordHash = await bcrypt.hash('User@123456', 10);
   const demoUser = await prisma.user.upsert({

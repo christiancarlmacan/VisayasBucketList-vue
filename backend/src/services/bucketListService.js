@@ -1,4 +1,5 @@
 import prisma from '../config/database.js';
+import { checkAndAwardAchievements } from './achievementService.js';
 
 export const getUserBucketList = async (userId, filterStatus = null) => {
   const where = { user_id: userId };
@@ -67,7 +68,7 @@ export const addToBucketList = async (userId, destinationId, status = 'WANT_TO_V
 
   const validStatus = status === 'VISITED' ? 'VISITED' : 'WANT_TO_VISIT';
 
-  return await prisma.bucketList.create({
+  const createdItem = await prisma.bucketList.create({
     data: {
       user_id: userId,
       destination_id: destinationId,
@@ -83,6 +84,13 @@ export const addToBucketList = async (userId, destinationId, status = 'WANT_TO_V
       },
     },
   });
+
+  // Evaluate achievements in background / non-blocking
+  checkAndAwardAchievements(userId).catch((err) =>
+    console.error('Error awarding achievements on add:', err)
+  );
+
+  return createdItem;
 };
 
 export const updateBucketListItemStatus = async (userId, idOrDestinationId, status) => {
@@ -100,7 +108,7 @@ export const updateBucketListItemStatus = async (userId, idOrDestinationId, stat
     throw new Error('Bucket list entry not found.');
   }
 
-  return await prisma.bucketList.update({
+  const updatedItem = await prisma.bucketList.update({
     where: { id: item.id },
     data: { status: validStatus },
     include: {
@@ -113,6 +121,15 @@ export const updateBucketListItemStatus = async (userId, idOrDestinationId, stat
       },
     },
   });
+
+  // Evaluate achievements if marked as visited
+  if (validStatus === 'VISITED') {
+    checkAndAwardAchievements(userId).catch((err) =>
+      console.error('Error awarding achievements on update:', err)
+    );
+  }
+
+  return updatedItem;
 };
 
 export const removeFromBucketList = async (userId, idOrDestinationId) => {

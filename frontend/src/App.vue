@@ -1,18 +1,26 @@
 <template>
-  <DefaultLayout>
+  <component :is="currentLayout">
     <router-view />
-  </DefaultLayout>
+  </component>
+  <ToastContainer />
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import DefaultLayout from '@/layouts/DefaultLayout.vue';
+import AdminLayout from '@/layouts/AdminLayout.vue';
+import ToastContainer from '@/components/ToastContainer.vue';
 import { useAuthStore } from '@/stores/auth';
 
+const route = useRoute();
 const authStore = useAuthStore();
 
+const currentLayout = computed(() => {
+  return route.meta.layout === 'admin' ? AdminLayout : DefaultLayout;
+});
+
 onMounted(async () => {
-  // If user has token, verify and refresh profile
   if (authStore.token) {
     await authStore.fetchMe();
   }

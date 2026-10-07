@@ -110,6 +110,7 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useBucketListStore } from '@/stores/bucketList';
+import { useToastStore } from '@/stores/toast';
 import RatingStars from './RatingStars.vue';
 
 const props = defineProps({
@@ -122,6 +123,7 @@ const props = defineProps({
 const router = useRouter();
 const authStore = useAuthStore();
 const bucketListStore = useBucketListStore();
+const toast = useToastStore();
 
 const fallbackImage =
   'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
@@ -151,8 +153,9 @@ const handleFavoriteToggle = async () => {
   }
   try {
     await bucketListStore.toggleFavorite(props.destination.id);
+    toast.success(isFav.value ? 'Removed from favorites.' : 'Saved to favorites! ❤️');
   } catch (err) {
-    alert(err.message);
+    toast.error(err.message);
   }
 };
 
@@ -163,8 +166,9 @@ const handleBucketListAdd = async () => {
   }
   try {
     await bucketListStore.addToBucketList(props.destination.id);
+    toast.success(`"${props.destination.name}" added to your bucket list!`);
   } catch (err) {
-    alert(err.message);
+    toast.error(err.message);
   }
 };
 </script>

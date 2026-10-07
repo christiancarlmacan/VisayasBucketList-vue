@@ -75,10 +75,12 @@
 import { ref, reactive } from 'vue';
 import { useRouter, useRoute, RouterLink } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useToastStore } from '@/stores/toast';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const toast = useToastStore();
 
 const form = reactive({
   email: '',
@@ -90,10 +92,11 @@ const errorMessage = ref('');
 const handleSubmit = async () => {
   errorMessage.value = '';
   try {
-    await authStore.login({
+    const user = await authStore.login({
       email: form.email,
       password: form.password,
     });
+    toast.success(`Welcome back, ${user.name}! 🌴`);
     const redirectPath = route.query.redirect || '/bucket-list';
     router.push(redirectPath);
   } catch (err) {

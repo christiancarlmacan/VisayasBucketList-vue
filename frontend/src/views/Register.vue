@@ -87,9 +87,11 @@
 import { ref, reactive } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useToastStore } from '@/stores/toast';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const toast = useToastStore();
 
 const form = reactive({
   name: '',
@@ -102,11 +104,12 @@ const errorMessage = ref('');
 const handleSubmit = async () => {
   errorMessage.value = '';
   try {
-    await authStore.register({
+    const user = await authStore.register({
       name: form.name,
       email: form.email,
       password: form.password,
     });
+    toast.success(`Welcome to VisayasBucketList, ${user.name}! 🌴`);
     router.push('/bucket-list');
   } catch (err) {
     errorMessage.value = err.message || 'Registration failed. Please try again.';

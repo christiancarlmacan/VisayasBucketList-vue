@@ -164,24 +164,97 @@
               <RatingStars :rating="destination.average_rating || 0" />
             </div>
 
-            <div v-if="destination.reviews && destination.reviews.length > 0" class="space-y-4">
-              <div
-                v-for="rev in destination.reviews"
-                :key="rev.id"
-                class="p-4 bg-slate-50 rounded-xl space-y-2 border border-slate-100"
-              >
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-slate-800">{{ rev.user?.name || 'Traveler' }}</span>
-                  <RatingStars :rating="rev.rating" :showNumber="false" />
+            <!-- Review Submission Form -->
+            <div class="p-5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-4">
+              <template v-if="authStore.isAuthenticated">
+                <h4 class="text-sm font-black text-slate-900">
+                  {{ userReview ? 'Update Your Review' : 'Leave a Traveler Review' }}
+                </h4>
+
+                <!-- Star Rating Picker -->
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-slate-500">Your Rating:</span>
+                  <div class="flex items-center gap-1">
+                    <button
+                      v-for="star in 5"
+                      :key="star"
+                      type="button"
+                      @click="reviewRating = star"
+                      class="text-xl focus:outline-none transition-transform hover:scale-125"
+                      :class="star <= reviewRating ? 'text-amber-400' : 'text-slate-300'"
+                    >
+                      ★
+                    </button>
+                  </div>
+                  <span class="text-xs font-black text-slate-700 ml-1">
+                    {{ reviewRating }} / 5
+                  </span>
                 </div>
-                <p class="text-xs text-slate-600 leading-relaxed">
-                  {{ rev.comment }}
+
+                <!-- Comment Input -->
+                <div class="space-y-1">
+                  <textarea
+                    v-model="reviewComment"
+                    rows="3"
+                    placeholder="Share tips, highlights, or memorable experiences from this place..."
+                    class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-none"
+                    maxlength="1000"
+                  ></textarea>
+                  <div class="flex justify-between text-[10px] text-slate-400">
+                    <span>Minimum 3 characters</span>
+                    <span>{{ reviewComment.length }} / 1000</span>
+                  </div>
+                </div>
+
+                <!-- Submit / Cancel -->
+                <div class="flex items-center gap-3 justify-end">
+                  <button
+                    v-if="userReview"
+                    @click="handleDeleteReview(userReview.id)"
+                    type="button"
+                    class="px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                  >
+                    Delete Review
+                  </button>
+                  <button
+                    @click="handleSubmitReview"
+                    :disabled="submittingReview || reviewComment.trim().length < 3"
+                    class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm"
+                  >
+                    {{ submittingReview ? 'Saving...' : userReview ? 'Update Review' : 'Post Review' }}
+                  </button>
+                </div>
+              </template>
+
+              <!-- Not Authenticated Callout -->
+              <div v-else class="text-center py-4 space-y-2">
+                <p class="text-xs text-slate-600 font-medium">
+                  Have you explored {{ destination.name }}? Sign in to share your experience and rating.
                 </p>
+                <RouterLink
+                  :to="{ name: 'Login', query: { redirect: route.fullPath } }"
+                  class="inline-block px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow-xs"
+                >
+                  Sign In to Review
+                </RouterLink>
               </div>
             </div>
 
+            <!-- Existing Reviews List -->
+            <div v-if="destination.reviews && destination.reviews.length > 0" class="space-y-3">
+              <ReviewCard
+                v-for="rev in destination.reviews"
+                :key="rev.id"
+                :review="rev"
+                :canDelete="canDeleteReview(rev)"
+                :canEdit="rev.user_id === authStore.user?.id"
+                @delete="handleDeleteReview"
+                @edit="handleEditReviewClick"
+              />
+            </div>
+
             <div v-else class="text-center py-6 text-slate-400 text-xs">
-              No traveler reviews yet for this destination.
+              No traveler reviews yet for this destination. Be the first to review!
             </div>
           </div>
         </div>
@@ -222,23 +295,37 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDestinationStore } from '@/stores/destination';
 import { useAuthStore } from '@/stores/auth';
 import { useBucketListStore } from '@/stores/bucketList';
+import { useToastStore } from '@/stores/toast';
+import api from '@/services/api';
 import RatingStars from '@/components/RatingStars.vue';
+import ReviewCard from '@/components/ReviewCard.vue';
 
 const route = useRoute();
 const router = useRouter();
 const destinationStore = useDestinationStore();
 const authStore = useAuthStore();
 const bucketListStore = useBucketListStore();
+const toast = useToastStore();
 
 const fallbackImage =
   'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
 
 const destination = computed(() => destinationStore.currentDestination);
+
+// Review form state
+const reviewRating = ref(5);
+const reviewComment = ref('');
+const submittingReview = ref(false);
+
+const userReview = computed(() => {
+  if (!destination.value?.reviews || !authStore.user) return null;
+  return destination.value.reviews.find((r) => r.user_id === authStore.user.id);
+});
 
 const isFav = computed(() => {
   if (!destination.value) return false;
@@ -256,6 +343,11 @@ const isVisited = computed(() => {
   return item?.status === 'VISITED';
 });
 
+const canDeleteReview = (rev) => {
+  if (!authStore.isAuthenticated) return false;
+  return rev.user_id === authStore.user?.id || authStore.isAdmin;
+};
+
 onMounted(async () => {
   const idOrSlug = route.params.id;
   await destinationStore.fetchDestinationDetails(idOrSlug);
@@ -263,7 +355,15 @@ onMounted(async () => {
     bucketListStore.fetchBucketList();
     bucketListStore.fetchFavorites();
   }
+  syncUserReview();
 });
+
+const syncUserReview = () => {
+  if (userReview.value) {
+    reviewRating.value = userReview.value.rating;
+    reviewComment.value = userReview.value.comment;
+  }
+};
 
 const handleImageError = (e) => {
   e.target.src = fallbackImage;
@@ -276,8 +376,9 @@ const handleFavoriteToggle = async () => {
   }
   try {
     await bucketListStore.toggleFavorite(destination.value.id);
+    toast.success(isFav.value ? 'Added to favorites!' : 'Removed from favorites.');
   } catch (err) {
-    alert(err.message);
+    toast.error(err.message);
   }
 };
 
@@ -288,8 +389,9 @@ const handleAddToBucketList = async () => {
   }
   try {
     await bucketListStore.addToBucketList(destination.value.id);
+    toast.success(`"${destination.value.name}" added to your bucket list!`);
   } catch (err) {
-    alert(err.message);
+    toast.error(err.message);
   }
 };
 
@@ -297,8 +399,13 @@ const toggleVisited = async () => {
   try {
     const newStatus = isVisited.value ? 'WANT_TO_VISIT' : 'VISITED';
     await bucketListStore.updateStatus(destination.value.id, newStatus);
+    toast.success(
+      newStatus === 'VISITED'
+        ? `Marked "${destination.value.name}" as Visited! 🎉`
+        : `Marked "${destination.value.name}" as Want to Visit.`
+    );
   } catch (err) {
-    alert(err.message);
+    toast.error(err.message);
   }
 };
 
@@ -306,8 +413,46 @@ const handleRemoveFromBucketList = async () => {
   if (confirm(`Remove "${destination.value.name}" from your bucket list?`)) {
     try {
       await bucketListStore.removeFromBucketList(destination.value.id);
+      toast.info('Removed from bucket list.');
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
+    }
+  }
+};
+
+const handleSubmitReview = async () => {
+  if (!authStore.isAuthenticated) return;
+  submittingReview.value = true;
+  try {
+    await api.post(`/destinations/${destination.value.id}/reviews`, {
+      rating: reviewRating.value,
+      comment: reviewComment.value,
+    });
+    toast.success('Your review has been published!');
+    await destinationStore.fetchDestinationDetails(route.params.id);
+  } catch (err) {
+    toast.error(err.message);
+  } finally {
+    submittingReview.value = false;
+  }
+};
+
+const handleEditReviewClick = (rev) => {
+  reviewRating.value = rev.rating;
+  reviewComment.value = rev.comment;
+  window.scrollTo({ top: 400, behavior: 'smooth' });
+};
+
+const handleDeleteReview = async (reviewId) => {
+  if (confirm('Are you sure you want to delete this review?')) {
+    try {
+      await api.delete(`/reviews/${reviewId}`);
+      toast.success('Review removed.');
+      reviewComment.value = '';
+      reviewRating.value = 5;
+      await destinationStore.fetchDestinationDetails(route.params.id);
+    } catch (err) {
+      toast.error(err.message);
     }
   }
 };

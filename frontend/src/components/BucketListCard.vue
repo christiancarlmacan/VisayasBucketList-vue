@@ -80,6 +80,7 @@
 <script setup>
 import { RouterLink } from 'vue-router';
 import { useBucketListStore } from '@/stores/bucketList';
+import { useToastStore } from '@/stores/toast';
 
 const props = defineProps({
   item: {
@@ -88,7 +89,10 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['update-status', 'remove']);
+
 const bucketListStore = useBucketListStore();
+const toast = useToastStore();
 
 const fallbackImage =
   'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
@@ -101,8 +105,14 @@ const toggleStatus = async () => {
   const newStatus = props.item.status === 'VISITED' ? 'WANT_TO_VISIT' : 'VISITED';
   try {
     await bucketListStore.updateStatus(props.item.id, newStatus);
+    toast.success(
+      newStatus === 'VISITED'
+        ? `Marked "${props.item.destination?.name}" as Visited! 🎉`
+        : `Marked "${props.item.destination?.name}" as Want to Visit.`
+    );
+    emit('update-status', { id: props.item.id, status: newStatus });
   } catch (err) {
-    alert(err.message);
+    toast.error(err.message);
   }
 };
 
@@ -110,8 +120,10 @@ const removeItem = async () => {
   if (confirm(`Remove "${props.item.destination?.name}" from your bucket list?`)) {
     try {
       await bucketListStore.removeFromBucketList(props.item.id);
+      toast.info('Removed from bucket list.');
+      emit('remove', props.item.id);
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     }
   }
 };

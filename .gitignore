@@ -34,8 +34,12 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Vercel
+.vercel
+
 # Agent & Checkpoint files (local development instructions)
 AGENT.md
 AGENTS.md
 CHECKPOINT.md
 GEMINI.md
+VisayasBucketList_Architecture_Design_Plan (1).md

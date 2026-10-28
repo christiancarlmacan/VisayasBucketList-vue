@@ -131,7 +131,10 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '@/services/api';
+import { useDestinationStore } from '@/stores/destination';
+import { getLocalUsers } from '@/stores/auth';
 
+const destinationStore = useDestinationStore();
 const stats = ref(null);
 const loading = ref(true);
 
@@ -140,7 +143,18 @@ onMounted(async () => {
     const res = await api.get('/admin/stats');
     stats.value = res.data;
   } catch (err) {
-    console.error('Failed to load admin stats:', err);
+    await destinationStore.fetchDestinations({ limit: 50 });
+    const users = getLocalUsers();
+    stats.value = {
+      counts: {
+        users: users.length,
+        destinations: destinationStore.destinations.length,
+        reviews: 0,
+        bucketLists: 0,
+      },
+      recentDestinations: destinationStore.destinations.slice(0, 5),
+      recentReviews: [],
+    };
   } finally {
     loading.value = false;
   }

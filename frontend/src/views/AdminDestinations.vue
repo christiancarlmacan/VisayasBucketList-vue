@@ -252,9 +252,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '@/services/api';
+import { useDestinationStore } from '@/stores/destination';
 import { useToastStore } from '@/stores/toast';
 
 const toast = useToastStore();
+const destinationStore = useDestinationStore();
 const fallbackImg =
   'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=300&q=80';
 
@@ -293,7 +295,12 @@ const loadDestinations = async () => {
     const res = await api.get('/destinations', { params });
     destinations.value = res.data.destinations;
   } catch (err) {
-    toast.error('Failed to load destinations.');
+    await destinationStore.fetchDestinations({
+      limit: 50,
+      search: searchQuery.value,
+      category: selectedCategory.value,
+    });
+    destinations.value = destinationStore.destinations;
   } finally {
     loading.value = false;
   }
@@ -304,7 +311,7 @@ const loadCategories = async () => {
     const res = await api.get('/categories');
     categories.value = res.data.categories;
   } catch (err) {
-    console.error(err);
+    categories.value = await destinationStore.fetchCategories();
   }
 };
 

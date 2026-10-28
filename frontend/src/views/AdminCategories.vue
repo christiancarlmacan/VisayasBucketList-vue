@@ -133,9 +133,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '@/services/api';
+import { useDestinationStore } from '@/stores/destination';
 import { useToastStore } from '@/stores/toast';
 
 const toast = useToastStore();
+const destinationStore = useDestinationStore();
 
 const categories = ref([]);
 const loading = ref(false);
@@ -156,7 +158,7 @@ const loadCategories = async () => {
     const res = await api.get('/categories');
     categories.value = res.data.categories;
   } catch (err) {
-    toast.error('Failed to load categories.');
+    categories.value = await destinationStore.fetchCategories();
   } finally {
     loading.value = false;
   }

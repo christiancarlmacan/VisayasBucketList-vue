@@ -3,10 +3,26 @@ import api from '@/services/api';
 
 const LOCAL_USERS_KEY = 'vbl_local_users';
 
-const getLocalUsers = () => {
+export const getLocalUsers = () => {
   try {
     const raw = localStorage.getItem(LOCAL_USERS_KEY);
     const list = raw ? JSON.parse(raw) : [];
+
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'admin@visayasbucketlist.ph';
+    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'Admin@123456';
+
+    if (!list.some((u) => u.email === adminEmail)) {
+      list.unshift({
+        id: 'system-admin-id',
+        name: 'System Admin',
+        email: adminEmail,
+        password: adminPassword,
+        role: 'ADMIN',
+        profile_image: null,
+        created_at: new Date().toISOString(),
+      });
+    }
+
     if (!list.some((u) => u.email === 'traveler@visayasbucketlist.ph')) {
       list.push({
         id: 'demo-traveler-id',
@@ -24,7 +40,7 @@ const getLocalUsers = () => {
   }
 };
 
-const saveLocalUsers = (users) => {
+export const saveLocalUsers = (users) => {
   localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
 };
 

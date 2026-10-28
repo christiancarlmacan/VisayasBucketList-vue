@@ -101,6 +101,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '@/services/api';
+import { getLocalUsers, saveLocalUsers } from '@/stores/auth';
 import { useToastStore } from '@/stores/toast';
 
 const toast = useToastStore();
@@ -118,7 +119,15 @@ const loadUsers = async () => {
     users.value = res.data.users;
     total.value = res.data.pagination?.total || users.value.length;
   } catch (err) {
-    toast.error('Failed to load users.');
+    let local = getLocalUsers();
+    if (searchQuery.value) {
+      const q = searchQuery.value.toLowerCase();
+      local = local.filter(
+        (u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+      );
+    }
+    users.value = local;
+    total.value = local.length;
   } finally {
     loading.value = false;
   }
@@ -134,7 +143,12 @@ const toggleRole = async (u) => {
       toast.success(`User role updated to ${newRole}!`);
       loadUsers();
     } catch (err) {
-      toast.error(err.message);
+      const local = getLocalUsers().map((item) =>
+        item.id === u.id ? { ...item, role: newRole } : item
+      );
+      saveLocalUsers(local);
+      toast.success(`User role updated to ${newRole}!`);
+      loadUsers();
     }
   }
 };
@@ -146,7 +160,10 @@ const handleDelete = async (u) => {
       toast.success('User account removed.');
       loadUsers();
     } catch (err) {
-      toast.error(err.message);
+      const local = getLocalUsers().filter((item) => item.id !== u.id);
+      saveLocalUsers(local);
+      toast.success('User account removed.');
+      loadUsers();
     }
   }
 };

@@ -1,5 +1,5 @@
 <template>
-  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-xs">
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-xs transition-colors">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <!-- Logo -->
@@ -62,8 +62,47 @@
           </template>
         </nav>
 
-        <!-- Auth & Admin Controls (Desktop) -->
-        <div class="hidden md:flex items-center gap-3">
+        <!-- Auth, Theme Toggle & Admin Controls (Desktop) -->
+        <div class="hidden md:flex items-center gap-2.5">
+          <!-- Light / Dark Mode Toggle Button -->
+          <button
+            type="button"
+            @click="toggleTheme"
+            class="p-2 rounded-xl border border-slate-200 text-slate-600 hover:text-teal-600 hover:bg-slate-50 transition-all"
+            :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+          >
+            <!-- Sun Icon (shown in dark mode) -->
+            <svg
+              v-if="isDark"
+              class="w-4 h-4 text-amber-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            <!-- Moon Icon (shown in light mode) -->
+            <svg
+              v-else
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+              />
+            </svg>
+          </button>
+
           <template v-if="authStore.isAuthenticated">
             <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
               <!-- Admin Switcher Link -->
@@ -117,28 +156,66 @@
           </template>
         </div>
 
-        <!-- Mobile Menu Toggle Button -->
-        <button
-          @click="mobileMenuOpen = !mobileMenuOpen"
-          class="md:hidden p-2 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 focus:outline-none"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              v-if="!mobileMenuOpen"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-            <path
+        <!-- Mobile Right Controls (Theme Toggle + Hamburger) -->
+        <div class="flex items-center gap-1.5 md:hidden">
+          <button
+            type="button"
+            @click="toggleTheme"
+            class="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 focus:outline-none"
+            :title="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+          >
+            <svg
+              v-if="isDark"
+              class="w-5 h-5 text-amber-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            <svg
               v-else
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+              />
+            </svg>
+          </button>
+
+          <button
+            @click="mobileMenuOpen = !mobileMenuOpen"
+            class="p-2 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 focus:outline-none"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                v-if="!mobileMenuOpen"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+              <path
+                v-else
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Mobile Dropdown -->
@@ -230,7 +307,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useBucketListStore } from '@/stores/bucketList';
@@ -240,6 +317,24 @@ const authStore = useAuthStore();
 const bucketListStore = useBucketListStore();
 
 const mobileMenuOpen = ref(false);
+const isDark = ref(false);
+
+onMounted(() => {
+  isDark.value =
+    localStorage.getItem('vbl_theme') === 'dark' ||
+    document.documentElement.classList.contains('dark');
+});
+
+const toggleTheme = () => {
+  isDark.value = !isDark.value;
+  if (isDark.value) {
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('vbl_theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem('vbl_theme', 'light');
+  }
+};
 
 const handleLogout = () => {
   authStore.logout();

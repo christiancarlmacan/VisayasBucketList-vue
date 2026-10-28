@@ -6,6 +6,75 @@ body {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   color: #1e293b;
   background-color: #f8fafc;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Global Dark Mode Theme Overrides */
+html.dark body {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+html.dark .bg-slate-50 {
+  background-color: #0f172a !important;
+}
+
+html.dark .bg-white {
+  background-color: #1e293b !important;
+}
+
+html.dark .bg-white\/95,
+html.dark .bg-white\/90,
+html.dark .bg-white\/80 {
+  background-color: rgba(30, 41, 59, 0.92) !important;
+}
+
+html.dark .bg-slate-100 {
+  background-color: #334155 !important;
+}
+
+html.dark .text-slate-900,
+html.dark .text-slate-800 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+html.dark .text-teal-800,
+html.dark .text-teal-700 {
+  color: #2dd4bf !important;
+}
+
+html.dark .bg-teal-50 {
+  background-color: rgba(20, 184, 166, 0.15) !important;
+}
+
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-50 {
+  border-color: #334155 !important;
+}
+
+html.dark input:not([class*="bg-slate-800"]):not([class*="bg-slate-900"]),
+html.dark select:not([class*="bg-slate-800"]):not([class*="bg-slate-900"]),
+html.dark textarea:not([class*="bg-slate-800"]):not([class*="bg-slate-900"]) {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b !important;
 }
 
 /* Custom scrollbars and transitions */
@@ -16,9 +85,15 @@ body {
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
+html.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;

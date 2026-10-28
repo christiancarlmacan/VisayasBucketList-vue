@@ -1,4 +1,4 @@
-  <template>
+<template>
   <component :is="currentLayout">
     <router-view />
   </component>
@@ -21,6 +21,13 @@ const currentLayout = computed(() => {
 });
 
 onMounted(async () => {
+  const savedTheme = localStorage.getItem('vbl_theme');
+  if (savedTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+
   if (authStore.token) {
     await authStore.fetchMe();
   }
